@@ -2,29 +2,38 @@ package com.example.firstrestalishev.run;
 
 import com.example.firstrestalishev.dto.MeasurementDTO;
 import com.example.firstrestalishev.dto.SensorDTO;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class RunFunction {
 
     private static final String SENSOR_NAME = "New Sensor";
     private static final String ADD_MEASUREMENT = "http://localhost:8088/measurement/add";
     private static final String REGISTER_SENSOR = "http://localhost:8088/sensor/registration";
-    private static final String GET_MEASUREMENT = "http://localhost:8088/measurement";
+    private static final String GET_ALL_MEASUREMENTS = "http://localhost:8088/measurement";
     private static final Random random = new Random();
     private static final RestTemplate restTemplate = new RestTemplate();
+    private static final RunFunction runFunction = new RunFunction();
+
+    private RunFunction() {
+    }
+
+    public static RunFunction getInstance() {
+        return runFunction;
+    }
 
     public static void main(String[] args) {
 
         /*RunFunction.registerSensor(SENSOR_NAME);*/
-        RunFunction.add1000RandomMeasures();
-        /*RunFunction.get1000Measures();*/
+        /*RunFunction.add1000RandomMeasures();*/
+        List<MeasurementDTO> allMeasurements = getInstance().getAllMeasures();
+        showMeasurementResults(allMeasurements);
 
     }
 
@@ -46,9 +55,21 @@ public class RunFunction {
         return map;
     }
 
-    public static void get1000Measures() {
+    public List<MeasurementDTO> getAllMeasures() {
 
+        ParameterizedTypeReference<List<MeasurementDTO>> typeRef =
+                new ParameterizedTypeReference<List<MeasurementDTO>>(){};
+        return restTemplate.exchange
+                (GET_ALL_MEASUREMENTS, HttpMethod.GET, null, typeRef).getBody();
+    }
 
+    private static void showMeasurementResults(List<MeasurementDTO> data) {
+        for (MeasurementDTO measurementDTO : data) {
+            String text = measurementDTO.getSensor().getName() + "\n" +
+                    measurementDTO.getValue() + "\n" +
+                    measurementDTO.isRaining() + "\n";
+            System.out.println(text);
+        }
     }
 
     public static void registerSensor(String sensorName) {
